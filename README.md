@@ -1,0 +1,2 @@
+# ogameBot
+My bot
