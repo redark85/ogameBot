@@ -9,6 +9,9 @@ namespace NinjaBot.Domain.Models
 
         [JsonPropertyName("gameEnvironmentId")]
         public string GameEnvironmentId { get; set; } = string.Empty;
+        
+        [JsonPropertyName("gfLang")]
+        public string Language { get; set; } = string.Empty;
 
         [JsonPropertyName("identity")]
         public string Identity { get; set; } = string.Empty;

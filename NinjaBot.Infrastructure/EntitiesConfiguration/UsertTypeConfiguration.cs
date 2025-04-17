@@ -13,5 +13,6 @@ public class UsertTypeConfiguration : BaseTypeConfiguration<User>
         builder.Property(x => x.Email).HasMaxLength(50);
         builder.Property(x => x.Universe).HasMaxLength(20);
         builder.Property(x => x.Language).HasMaxLength(10);
+        builder.Property(x => x.Locale).HasMaxLength(5);
     }
 }

@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
 using NinjaBot.Core.Services;
+using NinjaBot.Domain.Dtos;
+using NinjaBot.Domain.Models;
 using NinjaBot.Shared.Dtos.Requests;
 
 namespace NinjaBot.API.Controllers

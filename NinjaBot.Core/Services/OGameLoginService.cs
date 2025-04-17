@@ -1,8 +1,6 @@
 using OpenQA.Selenium;
-using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.Support.UI;
 using OpenQA.Selenium.DevTools;
-using OpenQA.Selenium.DevTools.V135.Fetch;
 using System.Text.Json;
 using System.Text;
 using NinjaBot.Domain.Models;
@@ -11,6 +9,7 @@ using NinjaBot.Shared.Dtos.Requests;
 using NinjaBot.Domain.Interfaces.Services;
 using NinjaBot.Domain.Entities;
 using SeleniumExtras.WaitHelpers;
+using NinjaBot.Domain.Dtos;
 
 namespace NinjaBot.Core.Services
 {
@@ -22,7 +21,7 @@ namespace NinjaBot.Core.Services
         private IDevTools? _devTools;
         private DevToolsSession? _session;
         private OGameLoginPayload? _interceptedPayload;
-
+        private static readonly HttpClient client = new HttpClient();
         public OGameLoginService(
             IWebDriver driver,
             IServiceScopeFactory serviceScopeFactory)
@@ -32,7 +31,7 @@ namespace NinjaBot.Core.Services
             _wait = new WebDriverWait(_driver, TimeSpan.FromSeconds(5));
         }
 
-        public async Task<OGameLoginPayload?> LoginWithCredentialsAsync(LoginRequestDto dto)
+        public async Task<bool> LoginWithCredentialsAsync(LoginRequestDto dto)
         {
             _devTools = _driver as IDevTools;
             _session = _devTools?.GetDevToolsSession();
@@ -45,104 +44,118 @@ namespace NinjaBot.Core.Services
 
             await networkDomain.Enable(new OpenQA.Selenium.DevTools.V135.Fetch.EnableCommandSettings());
 
-            networkDomain.RequestPaused += async (sender, e) =>
-            {
-                Console.WriteLine($"Request: {e.Request.Url}");
-
-                if (e.Request.Url.Contains("/api/v1/auth/thin/sessions") &&
-                    e.Request.Method == "POST")
-                {
-                    try
+            do
+            {                
+                networkDomain.RequestPaused += async (sender, e) =>
+                {                    
+                    if (e.Request.Url.Contains("/api/v1/auth/thin/sessions") &&
+                        e.Request.Method == "POST")
                     {
-                        if (!string.IsNullOrEmpty(e.Request.PostData))
+                        Console.WriteLine($"Response: {e}");
+
+                        try
                         {
-                            _interceptedPayload = JsonSerializer.Deserialize<OGameLoginPayload>(e.Request.PostData);
-                            Console.WriteLine($"Intercepted and parsed payload: {JsonSerializer.Serialize(_interceptedPayload, new JsonSerializerOptions { WriteIndented = true })}");
-                            if (_interceptedPayload != null)
+                            if (!string.IsNullOrEmpty(e.Request.PostData))
                             {
-                                await CreateUser(_interceptedPayload, dto);
+                                _interceptedPayload = JsonSerializer.Deserialize<OGameLoginPayload>(e.Request.PostData);
+                                Console.WriteLine($"Intercepted and parsed payload: {JsonSerializer.Serialize(_interceptedPayload, new JsonSerializerOptions { WriteIndented = true })}");
+                                
                             }
                         }
-                    }
-                    catch (Exception ex)
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"Error parsing payload: {ex.Message}");
+                        }
+                    }                    
+                    try
                     {
-                        Console.WriteLine($"Error parsing payload: {ex.Message}");
+                        await networkDomain.ContinueRequest(new OpenQA.Selenium.DevTools.V135.Fetch.ContinueRequestCommandSettings
+                        {
+                            RequestId = e.RequestId
+                        });
                     }
-                }
-                await networkDomain.ContinueRequest(new OpenQA.Selenium.DevTools.V135.Fetch.ContinueRequestCommandSettings
+                    catch (Exception)
+                    {
+
+                        
+                    }
+                   
+                };
+
+                if (_interceptedPayload == null)
                 {
-                    RequestId = e.RequestId
-                });
-            };
+                    _driver.Navigate().GoToUrl("https://lobby.ogame.gameforge.com/es_ES");
 
-            _driver.Navigate().GoToUrl("https://lobby.ogame.gameforge.com/es_ES");
+                    // Esperar contenedor de login
+                    var loginContainer = _wait.Until(
+                        ExpectedConditions.ElementIsVisible(By.ClassName("loginRegister"))
+                    );
 
-            // Esperar contenedor de login
-            var loginContainer = _wait.Until(
-                ExpectedConditions.ElementIsVisible(By.ClassName("loginRegister"))
-            );
+                    // Tabs container
+                    Console.WriteLine("Looking for tabs container...");
+                    var tabsContainer = loginContainer.FindElement(By.ClassName("tabs"));
 
-            // Tabs container
-            Console.WriteLine("Looking for tabs container...");
-            var tabsContainer = loginContainer.FindElement(By.ClassName("tabs"));
+                    // Buscar los tabs
+                    Console.WriteLine("Looking for login tab...");
+                    var loginTab = tabsContainer.FindElement(By.XPath(".//li[contains(text(), 'Iniciar')]"));
+                    var registerTab = tabsContainer.FindElement(By.XPath(".//li[contains(text(), 'Registrarse')]"));
 
-            // Buscar los tabs
-            Console.WriteLine("Looking for login tab...");
-            var loginTab = tabsContainer.FindElement(By.XPath(".//li[contains(text(), 'Iniciar')]"));
-            var registerTab = tabsContainer.FindElement(By.XPath(".//li[contains(text(), 'Registrarse')]"));
+                    // Cambiar a tab de login si está activo el de registro
+                    if (registerTab.GetAttribute("class")!.Contains("active"))
+                    {
+                        Console.WriteLine("Clicking login tab...");
+                        loginTab.Click();
+                        Thread.Sleep(1000); // Esperar por la animación
+                    }
 
-            // Cambiar a tab de login si está activo el de registro
-            if (registerTab.GetAttribute("class")!.Contains("active"))
-            {
-                Console.WriteLine("Clicking login tab...");
-                loginTab.Click();
-                Thread.Sleep(1000); // Esperar por la animación
+                    // Esperar por el formulario de login
+                    Console.WriteLine("Waiting for login form...");
+                    var loginForm = _wait.Until(
+                        ExpectedConditions.ElementIsVisible(By.Id("loginForm"))
+                    );
+
+                    // Campos de email y password
+                    Console.WriteLine("Finding form fields...");
+                    var emailWrapper = loginForm.FindElement(By.ClassName("inputWrap"));
+                    var emailInput = emailWrapper.FindElement(By.Name("email"));
+                    var passwordWrapper = emailWrapper.FindElement(By.XPath("following-sibling::div[@class='inputWrap']"));
+                    var passwordInput = passwordWrapper.FindElement(By.Name("password"));
+
+                    // Llenar formulario
+                    Console.WriteLine("Filling login form...");
+                    emailInput.Clear();
+                    emailInput.SendKeys(dto.Email);
+                    passwordInput.Clear();
+                    passwordInput.SendKeys(dto.Password);
+
+                    // Botón de login
+                    Console.WriteLine("Waiting for submit button to be clickable...");
+                    var submitButton = _wait.Until(
+                        ExpectedConditions.ElementToBeClickable(By.CssSelector("button.button-primary.button-lg[type='submit']"))
+                    );
+
+                    // Scroll y clic con JS
+                    Console.WriteLine("Scrolling to button...");
+                    ((IJavaScriptExecutor)_driver).ExecuteScript("arguments[0].scrollIntoView(true);", submitButton);
+                    Thread.Sleep(5000);
+
+                    Console.WriteLine("Clicking submit button using JavaScript...");
+                    ((IJavaScriptExecutor)_driver).ExecuteScript("arguments[0].click();", submitButton);
+                    Thread.Sleep(2000);
+                }
             }
+            while (_interceptedPayload == null);
 
-            // Esperar por el formulario de login
-            Console.WriteLine("Waiting for login form...");
-            var loginForm = _wait.Until(
-                ExpectedConditions.ElementIsVisible(By.Id("loginForm"))
-            );
-
-            // Campos de email y password
-            Console.WriteLine("Finding form fields...");
-            var emailWrapper = loginForm.FindElement(By.ClassName("inputWrap"));
-            var emailInput = emailWrapper.FindElement(By.Name("email"));
-            var passwordWrapper = emailWrapper.FindElement(By.XPath("following-sibling::div[@class='inputWrap']"));
-            var passwordInput = passwordWrapper.FindElement(By.Name("password"));
-
-            // Llenar formulario
-            Console.WriteLine("Filling login form...");
-            emailInput.Clear();
-            emailInput.SendKeys(dto.Email);
-            passwordInput.Clear();
-            passwordInput.SendKeys(dto.Password);
-
-            // Botón de login
-            Console.WriteLine("Waiting for submit button to be clickable...");
-            var submitButton = _wait.Until(
-                ExpectedConditions.ElementToBeClickable(By.CssSelector("button.button-primary.button-lg[type='submit']"))
-            );
-
-            // Scroll y clic con JS
-            Console.WriteLine("Scrolling to button...");
-            ((IJavaScriptExecutor)_driver).ExecuteScript("arguments[0].scrollIntoView(true);", submitButton);
-            Thread.Sleep(5000);
-
-            Console.WriteLine("Clicking submit button using JavaScript...");
-            ((IJavaScriptExecutor)_driver).ExecuteScript("arguments[0].click();", submitButton);
-            Thread.Sleep(2000);
-
-
-
-            return _interceptedPayload;
-
+            if (_interceptedPayload != null)
+            {
+               return await Login(_interceptedPayload!);
+            }
+            return false;
+            
         }
 
-        public async Task<bool> CreateUser(OGameLoginPayload dto, LoginRequestDto userData)
+        public async Task<bool> CreateUser(OGameLoginPayload dto, string password, string universe)
         {
-            // Crear un nuevo scope para el DbContext
             using (var scope = _serviceScopeFactory.CreateScope())
             {
                 var dataService = scope.ServiceProvider.GetRequiredService<IAppDataService>();
@@ -150,11 +163,12 @@ namespace NinjaBot.Core.Services
                 var user = new User
                 {
                     Blackbox = dto.Blackbox,
-                    Email = userData.Email,
-                    Language = userData.Language,
-                    Password = userData.Password,
-                    Token = "",
-                    Universe = userData.Universe
+                    Email = dto.Identity,
+                    Language = dto.Language,
+                    Password = dto.Password,
+                    Token = password,
+                    Universe = universe,
+                    Locale = dto.Locale
                 };
 
                 dataService.User.Add(user);
@@ -162,6 +176,84 @@ namespace NinjaBot.Core.Services
                 return true;
             }
         }
+
+        public async Task<bool> SolveCaptchaAsync(string challengeId, string locale)
+        {
+            var baseUrl = $"https://image-drop-challenge.gameforge.com/challenge/{challengeId}/{locale}";
+
+            // 1. GET
+            var getResponse = await client.GetAsync(baseUrl);
+            var getContent = await getResponse.Content.ReadAsStringAsync();
+
+            var getJson = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, object>>(getContent);
+
+            if (!getJson.ContainsKey("status") || getJson["status"].ToString() != "presented")
+            {
+                throw new Exception("El captcha no está disponible para resolver.");
+            }
+
+            // 2. POST con respuesta "0"
+            var postData = new { answer = 0 };
+            var json = Newtonsoft.Json.JsonConvert.SerializeObject(postData);
+            var postContent = new StringContent(json, Encoding.UTF8, "application/json");
+
+            var postResponse = await client.PostAsync(baseUrl, postContent);
+            var postString = await postResponse.Content.ReadAsStringAsync();
+
+            var postJson = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, object>>(postString);
+
+            if (postJson.ContainsKey("status") && postJson["status"].ToString() == "solved")
+            {
+                Console.WriteLine("Captcha resuelto correctamente.");
+                return true;
+            }
+            else
+            {
+                Console.WriteLine("Reintentando captcha...");
+                return await SolveCaptchaAsync(challengeId, locale); // Recursividad
+            }
+        }
+
+        public async Task<bool> Login(OGameLoginPayload dto)
+        {
+            var loginData = new
+            {
+                blackbox = dto.Blackbox,
+                gameEnvironmentId = dto.GameEnvironmentId,
+                gfLang = dto.Language,
+                identity = dto.Identity,
+                locale = dto.Locale,
+                password = dto.Password,
+                platformGameId = dto.PlatformGameId,
+            };
+
+            var json = Newtonsoft.Json.JsonConvert.SerializeObject(loginData);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+            // POST request
+            HttpResponseMessage response = await client.PostAsync("https://gameforge.com/api/v1/auth/thin/sessions", content);
+            Thread.Sleep(1000);
+
+            if (response.IsSuccessStatusCode)
+            {
+                string responseString = await response.Content.ReadAsStringAsync();
+                TokenResponse loginResponse = Newtonsoft.Json.JsonConvert.DeserializeObject<TokenResponse>(responseString)!;
+                return await CreateUser(dto, dto.Password, loginResponse.Token);
+            }
+            else if (response.StatusCode == System.Net.HttpStatusCode.Conflict)
+            {
+                var challengeId = response.Headers.GetValues("gf-challenge-id").FirstOrDefault();
+                if (await SolveCaptchaAsync(challengeId!, dto.Locale))
+                {
+                    return await Login(dto);
+                }
+                ;
+                return false;
+
+            }
+            return false;
+        }
+
         public void Dispose()
         {
         }

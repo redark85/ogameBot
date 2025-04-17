@@ -8,5 +8,6 @@ public class User : BaseEntity
     public string Blackbox { get; set; } = string.Empty;
     public string Universe { get; set; } = string.Empty;
     public string Language { get; set; } = string.Empty;
+    public string Locale { get; set; } = string.Empty;
 
 }
