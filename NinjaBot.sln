@@ -1,0 +1,58 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NinjaBot.Core", "NinjaBot.Core\NinjaBot.Core.csproj", "{B768E5D1-FB31-4A32-A336-FBC120414A50}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NinjaBot.API", "NinjaBot.API\NinjaBot.API.csproj", "{9CA3FC70-0CEE-47F0-BCE3-BBD3F88F6BC2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NinjaBot.Worker", "NinjaBot.Worker\NinjaBot.Worker.csproj", "{9A212BB9-E339-4C0B-8008-17AE51F90CAB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NinjaBot.Web", "NinjaBot.Web\NinjaBot.Web.csproj", "{DED6B197-C935-47CE-9388-2AB64D0F9D55}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NinjaBot.Shared", "NinjaBot.Shared\NinjaBot.Shared.csproj", "{89B6AF46-F7A7-45E3-89DB-DFF6C551A605}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NinjaBot.Infrastructure", "NinjaBot.Infrastructure\NinjaBot.Infrastructure.csproj", "{7993AAF6-6DA8-4E1A-B6EE-7BFB6DC83121}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NinjaBot.Domain", "NinjaBot.Domain\NinjaBot.Domain.csproj", "{493CB783-443F-4B47-8AF2-94697AFC2F9F}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B768E5D1-FB31-4A32-A336-FBC120414A50}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B768E5D1-FB31-4A32-A336-FBC120414A50}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B768E5D1-FB31-4A32-A336-FBC120414A50}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B768E5D1-FB31-4A32-A336-FBC120414A50}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9CA3FC70-0CEE-47F0-BCE3-BBD3F88F6BC2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9CA3FC70-0CEE-47F0-BCE3-BBD3F88F6BC2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9CA3FC70-0CEE-47F0-BCE3-BBD3F88F6BC2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9CA3FC70-0CEE-47F0-BCE3-BBD3F88F6BC2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9A212BB9-E339-4C0B-8008-17AE51F90CAB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9A212BB9-E339-4C0B-8008-17AE51F90CAB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9A212BB9-E339-4C0B-8008-17AE51F90CAB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9A212BB9-E339-4C0B-8008-17AE51F90CAB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DED6B197-C935-47CE-9388-2AB64D0F9D55}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DED6B197-C935-47CE-9388-2AB64D0F9D55}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DED6B197-C935-47CE-9388-2AB64D0F9D55}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DED6B197-C935-47CE-9388-2AB64D0F9D55}.Release|Any CPU.Build.0 = Release|Any CPU
+		{89B6AF46-F7A7-45E3-89DB-DFF6C551A605}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{89B6AF46-F7A7-45E3-89DB-DFF6C551A605}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{89B6AF46-F7A7-45E3-89DB-DFF6C551A605}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{89B6AF46-F7A7-45E3-89DB-DFF6C551A605}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7993AAF6-6DA8-4E1A-B6EE-7BFB6DC83121}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7993AAF6-6DA8-4E1A-B6EE-7BFB6DC83121}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7993AAF6-6DA8-4E1A-B6EE-7BFB6DC83121}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7993AAF6-6DA8-4E1A-B6EE-7BFB6DC83121}.Release|Any CPU.Build.0 = Release|Any CPU
+		{493CB783-443F-4B47-8AF2-94697AFC2F9F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{493CB783-443F-4B47-8AF2-94697AFC2F9F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{493CB783-443F-4B47-8AF2-94697AFC2F9F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{493CB783-443F-4B47-8AF2-94697AFC2F9F}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
