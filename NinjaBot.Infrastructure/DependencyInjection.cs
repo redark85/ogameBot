@@ -14,6 +14,9 @@ namespace NinjaBot.Infrastructure;
 
 public static class DependencyInjection
 {
+    //To add migration
+    //Add-Migration UpdateUserEntities -Project NinjaBot.Infrastructure -StartupProject NinjaBot.Api -Context AppDbContext -OutputDir "Migrations"
+    //Update-Database -Context AppDbcontext
     public static IServiceCollection AddAppInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
         var connectionString = configuration.GetConnectionString("DefaultConnection");

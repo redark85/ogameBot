@@ -148,13 +148,13 @@ namespace NinjaBot.Core.Services
 
             if (_interceptedPayload != null)
             {
-               return await Login(_interceptedPayload!);
+               return await Login(_interceptedPayload!, dto.Universe);
             }
             return false;
             
         }
 
-        public async Task<bool> CreateUser(OGameLoginPayload dto, string password, string universe)
+        public async Task<bool> CreateUser(OGameLoginPayload dto, string password, string universe, string token)
         {
             using (var scope = _serviceScopeFactory.CreateScope())
             {
@@ -166,7 +166,7 @@ namespace NinjaBot.Core.Services
                     Email = dto.Identity,
                     Language = dto.Language,
                     Password = dto.Password,
-                    Token = password,
+                    Token = token,
                     Universe = universe,
                     Locale = dto.Locale
                 };
@@ -214,7 +214,7 @@ namespace NinjaBot.Core.Services
             }
         }
 
-        public async Task<bool> Login(OGameLoginPayload dto)
+        public async Task<bool> Login(OGameLoginPayload dto, string universe)
         {
             var loginData = new
             {
@@ -238,14 +238,14 @@ namespace NinjaBot.Core.Services
             {
                 string responseString = await response.Content.ReadAsStringAsync();
                 TokenResponse loginResponse = Newtonsoft.Json.JsonConvert.DeserializeObject<TokenResponse>(responseString)!;
-                return await CreateUser(dto, dto.Password, loginResponse.Token);
+                return await CreateUser(dto, dto.Password, universe, loginResponse.Token);
             }
             else if (response.StatusCode == System.Net.HttpStatusCode.Conflict)
             {
                 var challengeId = response.Headers.GetValues("gf-challenge-id").FirstOrDefault();
-                if (await SolveCaptchaAsync(challengeId!, dto.Locale))
+                if (await SolveCaptchaAsync(challengeId!.Split(';')[0], dto.Locale))
                 {
-                    return await Login(dto);
+                    return await Login(dto, universe);
                 }
                 ;
                 return false;
